@@ -62,7 +62,7 @@ mycursor.execute("USE Assignment;");
 
 class obj_dat:
     # create object for easier organization and database management
-    # here are the fields for the mysql table
+    # here are the fieldstable_name for the mysql table
     line_dump = "";
     # place holder for line dump dat
     rec_id = "        ";
@@ -164,6 +164,10 @@ def stamp_data(obj_dat):
     # give it back
     
 
+dat_table_create("DATMASTER");
+# create master table if not exists
+
+
 def do_everything():
     # put it all in a functiony
     working_path = deploy_input_path;  # replace with dir that 
@@ -233,6 +237,8 @@ def do_everything():
                 else:
                     dat_insert(temp_dat, table_name);
                     # insert data into mysql database
+                    dat_insert(temp_dat, "DATMASTER");
+                    # insert data into master table as well
                 
                 # dat_test(temp_dat);
                 # test those values
