@@ -5,13 +5,14 @@ Contact:(410) 939-7707
 
 @author: Jeremy Scheuerman
 
-@version: 2.1
+@version: 2.2
 
 Created:8/11/20
 
 Last Updated:8/12/20
 
-Changes:Updating Script
+Changes:Master table is created with this script
+need to add truncation and auto deletion after 30 days
 '''
 
 '''
