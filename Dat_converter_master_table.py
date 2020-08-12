@@ -5,11 +5,11 @@ Contact:(410) 939-7707
 
 @author: Jeremy Scheuerman
 
-@version: 2.0
+@version: 2.1
 
 Created:8/11/20
 
-Last Updated:8/11/20
+Last Updated:8/12/20
 
 Changes:Updating Script
 '''
@@ -44,9 +44,9 @@ deploy_check_interval = 15;
 # amount of time to wait in between next check IN SECONDS
 
 # database file located dat_converter/database file
-deploy_db_user = 'PaulCastro@eby-brown-assignment-mysql';
-deploy_db_pass = 'PC$My$SQL88';
-deploy_db_host = 'eby-brown-assignment-mysql.mysql.database.azure.com';
+deploy_db_user = 'Pendant';
+deploy_db_pass = 'Pendant0505';
+deploy_db_host = 'localhost';
 # insert database infromation
 
 cnct = connection.MySQLConnection(user=deploy_db_user, password=deploy_db_pass, host=deploy_db_host);                                                        
@@ -164,8 +164,10 @@ def stamp_data(obj_dat):
     # give it back
     
 
-dat_table_create("DATMASTER");
+dat_table_create("dat_master");
 # create master table if not exists
+mycursor.execute("DELETE FROM dat_master WHERE created_at < NOW() - INTERVAL 30 DAY;");
+# delete data older than 30 days
 
 
 def do_everything():
@@ -237,7 +239,7 @@ def do_everything():
                 else:
                     dat_insert(temp_dat, table_name);
                     # insert data into mysql database
-                    dat_insert(temp_dat, "DATMASTER");
+                    dat_insert(temp_dat, "dat_master");
                     # insert data into master table as well
                 
                 # dat_test(temp_dat);
