@@ -163,11 +163,30 @@ def stamp_data(obj_dat):
     data = juris + "," + "000000" + "," + "000000" + "," + cart;
     return data;
     # give it back
+
     
+def dat_truncate(table_name):
+    # deletes data older than 30 days and updates the id columns
+    return True;
+
 
 dat_table_create("dat_master");
 # create master table if not exists
-mycursor.execute("DELETE FROM dat_master WHERE created_at < NOW() - INTERVAL 30 DAY;");
+mycursor.execute("USE Assignment");
+query_del = ("DELETE FROM dat_master WHERE created_at < NOW() - INTERVAL 30 DAY LIMIT 1000;");
+# mycursor.execute(query_del);
+for result in mycursor.execute(query_del, multi=True):
+    # if result.with_rows:
+    print(result.fetchone())
+        
+mycursor.execute("SHOW TABLES");
+# get table names
+for (table_name,) in mycursor:
+    print(table_name);
+    query_del = ("DELETE FROM " + table_name + " WHERE created_at < NOW() - INTERVAL 30 DAY LIMIT 1000;");
+    
+cnct.commit();
+# print(mycursor.fetchone());
 # delete data older than 30 days
 
 
