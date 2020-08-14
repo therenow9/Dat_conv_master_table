@@ -11,8 +11,10 @@ Created:8/11/20
 
 Last Updated:8/12/20
 
-Changes:Master table is created with this script
-need to add truncation and auto deletion after 30 days
+Changes:Auto delete after 30 days  delete syntax works with mysql need to figure out the python connector issues, close to solving it i hope
+
+Issues:Mysql connector isn't taking with the data, don't know why
+
 '''
 
 '''
@@ -23,6 +25,13 @@ deploy_db_host = 'localhost';
 deploy_db_user = 'PaulCastro@eby-brown-assignment-mysql';
 deploy_db_pass = 'PC$My$SQL88';
 deploy_db_host = 'eby-brown-assignment-mysql.mysql.database.azure.com';
+
+deploy_input_path = "/home/jeremy/Documents/Pendant_automation/Lucas_Docs/dat_converter/input_file";                        
+# assign path of folder where the dat files are supposed to be   
+deploy_output_path = "/home/jeremy/Documents/Pendant_automation/Lucas_Docs/dat_converter/output_files/";
+# assign path to save output with dat files folder
+
+
 '''
 # /home/jeremy/Documents/Pendant_automation/Lucas_Docs
 import os, sys;
@@ -37,12 +46,13 @@ import atexit;
 # write code that happens if the script is terminated
  
 # deployment variables
-deploy_input_path = "/home/jeremy/Documents/Pendant_automation/Lucas_Docs/dat_converter/input_file";                        
-# assign path of folder where the dat files are supposed to be   
-deploy_output_path = "/home/jeremy/Documents/Pendant_automation/Lucas_Docs/dat_converter/output_files/";
+deploy_input_path = "D:\Documents\Pendant_automation\Lucas_Docs\Input_file";                        
+# assign path of folder where the dat files are supposed to be
+deploy_output_path = "D:\Documents\Pendant_automation\Lucas_Docs\Output_file";
 # assign path to save output with dat files folder
 deploy_check_interval = 15;
 # amount of time to wait in between next check IN SECONDS
+deploy_db = "db_test";
 
 # database file located dat_converter/database file
 deploy_db_user = 'Pendant';
@@ -55,9 +65,9 @@ cnct = connection.MySQLConnection(user=deploy_db_user, password=deploy_db_pass, 
 print("Connected to database succesfully");
 mycursor = cnct.cursor();
 # get cursor
-mycursor.execute("CREATE DATABASE IF NOT EXISTS Assignment");
+mycursor.execute("CREATE DATABASE IF NOT EXISTS " + deploy_db);
 # create if it isnt there
-mycursor.execute("USE Assignment;");
+mycursor.execute("USE " + deploy_db + ";");
 # switch to right database
 
 
@@ -172,20 +182,15 @@ def dat_truncate(table_name):
 
 dat_table_create("dat_master");
 # create master table if not exists
-mycursor.execute("USE Assignment");
-query_del = ("DELETE FROM dat_master WHERE created_at < NOW() - INTERVAL 30 DAY LIMIT 1000;");
-# mycursor.execute(query_del);
-for result in mycursor.execute(query_del, multi=True):
-    # if result.with_rows:
-    print(result.fetchone())
-        
+mycursor.execute("USE " + deploy_db);
 mycursor.execute("SHOW TABLES");
 # get table names
 for (table_name,) in mycursor:
-    print(table_name);
-    query_del = ("DELETE FROM " + table_name + " WHERE created_at < NOW() - INTERVAL 30 DAY LIMIT 1000;");
-    
-cnct.commit();
+    # query = ("DELETE FROM " + table_name + " WHERE created_at < NOW() - INTERVAL 30 DAY AND updated_at IS null LIMIT 1000;");
+    print(table_name + " is being cleaned of data older than 30 days")
+    query = ("DELETE FROM " + table_name + " WHERE created_at < NOW() - INTERVAL 30 DAY AND updated_at IS null LIMIT 1000;" + " DELETE FROM " + table_name + " WHERE updated_at IS NOT null and updated_at < NOW() - INTERVAL 30 DAY LIMIT 1000;", multi);
+
+    # query_del_up = ("DELETE FROM " + table_name + " WHERE updated_at IS NOT null and updated_at < NOW() - INTERVAL 30 DAY LIMIT 1000;");
 # print(mycursor.fetchone());
 # delete data older than 30 days
 
@@ -218,9 +223,9 @@ def do_everything():
         orig_file_name = fname;  # insert fancy functions to get name of file
         temp_name = orig_file_name[:-3];
         # get variable for file name and var for path
-        orig_file_path = working_path + "/" + orig_file_name;
+        orig_file_path = working_path + "\\" + orig_file_name;
         # path to delete file after job is done
-        save_path = save_path_location + "/" + temp_name;
+        save_path = save_path_location + "\\" + temp_name;
         # create save path name
         if os.path.exists(save_path):
             print("This file has already run through the program, skipping and deleting")
