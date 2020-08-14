@@ -3,11 +3,11 @@
 Pendant Automation
 Contact:(410) 939-7707
 @author: Jeremy Scheuerman
-@version: 2.3
+@version: 2.5
 Created:8/11/20
 Last Updated:8/14/20
-Changes:Auto delete after 30 days  delete syntax works with mysql need to figure out the python connector issues, close to solving it i hope
-Issues:Mysql connector isn't taking with the data, don't know why sql syntax works fine
+Changes:Resolved all issues, removed temp variables from header
+Issues:All issues resolved
 '''
 
 '''
@@ -18,21 +18,7 @@ deploy_db_host = 'localhost';
 deploy_db_user = 'PaulCastro@eby-brown-assignment-mysql';
 deploy_db_pass = 'PC$My$SQL88';
 deploy_db_host = 'eby-brown-assignment-mysql.mysql.database.azure.com';
-deploy_input_path = "/home/jeremy/Documents/Pendant_automation/Lucas_Docs/dat_converter/input_file";                        
-# assign path of folder where the dat files are supposed to be   
-deploy_output_path = "/home/jeremy/Documents/Pendant_automation/Lucas_Docs/dat_converter/output_files/";
-# assign path to save output with dat files folder
 
-Laptop 
-deploy_input_path = "/home/jeremy/Documents/Pendant_automation/Lucas_Docs/dat_converter/input_file";                        
-# assign path of folder where the dat files are supposed to be   
-deploy_output_path = "/home/jeremy/Documents/Pendant_automation/Lucas_Docs/dat_converter/output_files/";
-# assign path to save output with dat files folder
-
-PC
-deploy_input_path = "D:\Documents\Pendant_automation\Lucas_Docs\Input_file";                        
-# assign path of folder where the dat files are supposed to be
-deploy_output_path = "D:\Documents\Pendant_automation\Lucas_Docs\Output_file";
 '''
 # /home/jeremy/Documents/Pendant_automation/Lucas_Docs
 import os, sys;
@@ -47,12 +33,14 @@ import atexit;
 # write code that happens if the script is terminated
  
 # deployment variables
-deploy_input_path = "/home/jeremy/Documents/Pendant_automation/Lucas_Docs/dat_converter/input_file";                        
-# assign path of folder where the dat files are supposed to be   
-deploy_output_path = "/home/jeremy/Documents/Pendant_automation/Lucas_Docs/dat_converter/output_files/";
+deploy_input_path = "D:\Documents\Pendant_automation\Lucas_Docs\Input_file";                        
+# assign path of folder where the dat files are supposed to be
+deploy_output_path = "D:\Documents\Pendant_automation\Lucas_Docs\Output_file";
 # assign path to save output with dat files folder
-deploy_check_interval = 15;
+deploy_check_interval = 15;  # seconds
 # amount of time to wait in between next check IN SECONDS
+deploy_delete_interval = 24;  # hours
+# amount of time it waits to check for old records IN HOURS
 deploy_db = "db_test";
 
 # database file located dat_converter/database file
@@ -176,24 +164,54 @@ def stamp_data(obj_dat):
     # give it back
 
     
-def dat_truncate(table_name):
+def dat_truncate(database_name):
     # deletes data older than 30 days and updates the id columns
-    return True;
+    tables = [];
+    i = 0;
+    j = 0;
+    # initilize empty table array
+    # query_fix_rows = ("ALTER " + tables[j] + " document MODIFY COLUMN document_id INT NOT NULL AUTO_INCREMENT;");
+    # set query values for cursor
+    mycursor.execute("USE " + database_name);
+    mycursor.execute("SHOW TABLES");
+    # get table names
+    for (table_name,) in mycursor:
+        # assign table names to table array
+        tables.append(table_name);
+        # inc
+        i += 1;
+       
+    for j in range(len(tables)):
+        # does queries
+        if tables[j] == "dat_master":
+            # make sure not to delete the master table
+            mycursor.execute("DELETE FROM " + tables[j] + " WHERE created_at < NOW() - INTERVAL 30 DAY AND updated_at IS null LIMIT 1000;");
+            mycursor.execute("DELETE FROM " + tables[j] + " WHERE updated_at IS NOT null and updated_at < NOW() - INTERVAL 30 DAY LIMIT 1000;");
+        else:
+            mycursor.execute("DELETE FROM " + tables[j] + " WHERE created_at < NOW() - INTERVAL 30 DAY AND updated_at IS null LIMIT 1000;");
+            mycursor.execute("DELETE FROM " + tables[j] + " WHERE updated_at IS NOT null and updated_at < NOW() - INTERVAL 30 DAY LIMIT 1000;");
+            mycursor.execute("select * from " + tables[j]);
+            mycursor.fetchall();
+            # fetch all so we can get rows
+            rows = str(mycursor.rowcount);
+            rows = int(rows);
+            # cast to string and then back to int so we can read the data
+            if rows == 0:
+                # if the table is empty
+                mycursor.execute("DROP TABLE " + tables[j] + ";");
+                print(tables[j] + " was deleted");
+                # drop the table
+        # executing queries
+        print(tables[j] + " is being cleaned of data older than 30 days");
+        # make sure loop runs
+        j += 1;
+        # inc
+    cnct.commit();
+    # commit changes
 
 
 dat_table_create("dat_master");
 # create master table if not exists
-mycursor.execute("USE " + deploy_db);
-mycursor.execute("SHOW TABLES");
-# get table names
-for (table_name,) in mycursor:
-    # query = ("DELETE FROM " + table_name + " WHERE created_at < NOW() - INTERVAL 30 DAY AND updated_at IS null LIMIT 1000;");
-    print(table_name + " is being cleaned of data older than 30 days")
-    query = ("DELETE FROM " + table_name + " WHERE created_at < NOW() - INTERVAL 30 DAY AND updated_at IS null LIMIT 1000;")# + " DELETE FROM " + table_name + " WHERE updated_at IS NOT null and updated_at < NOW() - INTERVAL 30 DAY LIMIT 1000;");
-    query_fix_rows=("ALTER TABLE document MODIFY COLUMN document_id INT NOT NULL AUTO_INCREMENT;")
-    # query_del_up = ("DELETE FROM " + table_name + " WHERE updated_at IS NOT null and updated_at < NOW() - INTERVAL 30 DAY LIMIT 1000;");
-# print(mycursor.fetchone());
-# delete data older than 30 days
 
 
 def do_everything():
@@ -224,9 +242,9 @@ def do_everything():
         orig_file_name = fname;  # insert fancy functions to get name of file
         temp_name = orig_file_name[:-3];
         # get variable for file name and var for path
-        orig_file_path = working_path + "/" + orig_file_name;
+        orig_file_path = working_path + "\\" + orig_file_name;
         # path to delete file after job is done
-        save_path = save_path_location + "/" + temp_name;
+        save_path = save_path_location + "\\" + temp_name;
         # create save path name
         if os.path.exists(save_path):
             print("This file has already run through the program, skipping and deleting")
@@ -303,6 +321,8 @@ def do_everything():
 
 schedule.every(deploy_check_interval).seconds.do(do_everything);
 # do it every x amount of  seconds
+schedule.every(deploy_delete_interval).hours.do(dat_truncate, deploy_db);
+# schedule checking and deleting of tables
 while 1:
     schedule.run_pending();
     time.sleep(1);
