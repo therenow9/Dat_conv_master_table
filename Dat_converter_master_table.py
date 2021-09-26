@@ -12,12 +12,12 @@ Issues:All issues resolved
 
 '''
 Secondary Variables (for quick access)
-deploy_db_user = 'Pendant';
-deploy_db_pass = 'Pendant0505';
+deploy_db_user = 'User';
+deploy_db_pass = 'Password';
 deploy_db_host = 'localhost';
-deploy_db_user = 'PaulCastro@eby-brown-assignment-mysql';
-deploy_db_pass = 'PC$My$SQL88';
-deploy_db_host = 'eby-brown-assignment-mysql.mysql.database.azure.com';
+deploy_db_user = 'User@eby-brown-assignment-mysql';
+deploy_db_pass = 'DB_password';
+deploy_db_host = 'filler_name.mysql.database.azure.com';
 
 '''
 # /home/jeremy/Documents/Pendant_automation/Lucas_Docs
@@ -44,8 +44,8 @@ deploy_delete_interval = 24;  # hours
 deploy_db = "db_test";
 
 # database file located dat_converter/database file
-deploy_db_user = 'Pendant';
-deploy_db_pass = 'Pendant0505';
+deploy_db_user = 'User';
+deploy_db_pass = 'Password';
 deploy_db_host = 'localhost';
 # insert database infromation
 
